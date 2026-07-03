@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HBS13_데이터사이언스 퀴즈</title>
+  <style>
+    /* ── CSS Variables ──────────────────────────────────────────────────── */
+    :root {
+      --primary:      #2563EB;
+      --primary-light:#EFF6FF;
+      --success:      #10B981;
+      --success-light:#ECFDF5;
+      --error:        #EF4444;
+      --error-light:  #FEF2F2;
+      --bg:           #F1F5F9;
+      --card:         #FFFFFF;
+      --text-1:       #0F172A;
+      --text-2:       #475569;
+      --text-3:       #94A3B8;
+      --border:       #E2E8F0;
+      --border-hover: #CBD5E1;
+      --r:            14px;
+      --r-sm:         10px;
+      --shadow-sm:    0 1px 4px rgba(0,0,0,.06);
+      --shadow:       0 4px 20px rgba(0,0,0,.08);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,.12);
+    }
+
+    /* ── Reset & Base ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont,
+                   'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      line-height: 1.6;
+      min-height: 100%;
+    }
+
+    button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+    input  { font-family: inherit; outline: none; }
+
+    /* ── Screen Management ──────────────────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ── Shared: Primary Button ─────────────────────────────────────────── */
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--r-sm);
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, .25);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #1D4ED8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, .35);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled {
+      background: var(--border);
+      color: var(--text-3);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text-2);
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 12px 24px;
+      font-size: .95rem;
+      font-weight: 700;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    .btn-secondary:disabled { color: var(--text-3); cursor: not-allowed; }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       PASSWORD SCREEN
+    ═════════════════════════════════════════════════════════════════════ */
+    #screen-password {
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #EFF6FF 0%, #F1F5F9 100%);
+    }
+
+    .pw-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pw-lock { font-size: 56px; margin-bottom: 16px; }
+
+    .pw-card h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+
+    .pw-card p {
+      color: var(--text-2);
+      font-size: .9rem;
+      margin-bottom: 28px;
+    }
+
+    .pw-input-wrap { display: flex; gap: 10px; margin-bottom: 12px; }
+
+    #pw-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 1rem;
+      color: var(--text-1);
+      background: var(--bg);
+      transition: border-color .15s;
+      letter-spacing: .1em;
+      min-width: 0;
+    }
+    #pw-input:focus { border-color: var(--primary); background: #fff; }
+
+    #btn-pw { padding: 12px 20px; font-size: .95rem; white-space: nowrap; }
+
+    .pw-subtitle {
+      color: var(--text-3) !important;
+      font-size: .82rem !important;
+      margin-bottom: 20px !important;
+      line-height: 1.7;
+    }
+
+    #pw-error {
+      display: none;
+      color: var(--error);
+      font-size: .875rem;
+      margin-top: 4px;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       START SCREEN
+    ═════════════════════════════════════════════════════════════════════ */
+    #screen-start {
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #EFF6FF 0%, #F1F5F9 100%);
+    }
+
+    .start-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 52px 44px;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .start-icon { font-size: 64px; margin-bottom: 20px; }
+
+    .start-card h1 {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: var(--text-1);
+      margin-bottom: 10px;
+    }
+
+    .start-desc {
+      color: var(--text-2);
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+
+    .start-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-3);
+      font-size: .875rem;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .start-meta span { color: var(--text-2); font-weight: 600; }
+    .start-meta .sep { color: var(--border-hover); }
+
+    #btn-start { width: 100%; font-size: 1.1rem; padding: 16px; }
+    #btn-study {
+      width: 100%;
+      font-size: 1rem;
+      padding: 15px;
+      margin-top: 12px;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       QUIZ SCREEN
+    ═════════════════════════════════════════════════════════════════════ */
+    #screen-quiz { background: var(--bg); }
+
+    /* Header */
+    .quiz-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .question-counter {
+      font-size: .875rem;
+      color: var(--text-2);
+      white-space: nowrap;
+      min-width: 50px;
+    }
+    .question-counter strong {
+      font-size: 1rem;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #60A5FA);
+      border-radius: 99px;
+      transition: width .4s ease;
+      width: 0%;
+    }
+
+    .type-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    #btn-nav-panel {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 99px;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      transition: border-color .15s, background .15s;
+    }
+    #btn-nav-panel:hover { border-color: var(--primary); }
+
+    /* Main quiz area */
+    .quiz-main {
+      flex: 1;
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    .question-card {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .q-number-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .answered-badge {
+      display: none;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+    .answered-badge.correct { display: inline-block; background: var(--success-light); color: var(--success); }
+    .answered-badge.wrong   { display: inline-block; background: var(--error-light); color: var(--error); }
+
+    .q-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* ── OX Answer Buttons ──────────────────────────────────────────────── */
+    .ox-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .ox-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 28px 16px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
+      color: var(--text-2);
+      font-size: .9rem;
+      font-weight: 600;
+    }
+    .ox-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    .ox-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .ox-btn:disabled { cursor: default; }
+    .ox-btn.reveal-correct {
+      border-color: var(--success);
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .ox-btn.reveal-wrong {
+      border-color: var(--error);
+      background: var(--error-light);
+      color: var(--error);
+    }
+
+    .ox-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      font-size: 38px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .15s;
+    }
+    .ox-btn:hover:not(:disabled) .ox-circle, .ox-btn.selected .ox-circle { transform: scale(1.08); }
+
+    [data-value="O"] .ox-circle { background: #FEE2E2; color: #DC2626; }
+    [data-value="X"] .ox-circle { background: #DBEAFE; color: #2563EB; }
+
+    /* ── MC Answer Buttons ──────────────────────────────────────────────── */
+    .mc-area { display: flex; flex-direction: column; gap: 10px; }
+
+    .mc-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 18px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      text-align: left;
+      color: var(--text-1);
+      transition: border-color .15s, background .15s, transform .1s;
+    }
+    .mc-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateX(3px);
+    }
+    .mc-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .mc-btn:disabled { cursor: default; }
+    .mc-btn.reveal-correct {
+      border-color: var(--success);
+      background: var(--success-light);
+    }
+    .mc-btn.reveal-correct .mc-num { color: var(--success); }
+    .mc-btn.reveal-wrong {
+      border-color: var(--error);
+      background: var(--error-light);
+    }
+    .mc-btn.reveal-wrong .mc-num { color: var(--error); }
+
+    .mc-num {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 26px;
+      flex-shrink: 0;
+    }
+    .mc-text {
+      font-size: .95rem;
+      font-weight: 500;
+      color: var(--text-1);
+      line-height: 1.5;
+    }
+
+    /* 답변 완료된 문제에 표시되는 인라인 해설 */
+    .inline-explanation {
+      display: none;
+      margin-top: 24px;
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 16px 18px;
+      text-align: left;
+      border-left: 3px solid var(--primary);
+    }
+    .inline-explanation.visible { display: block; }
+    .inline-explanation .explanation-label { margin-bottom: 6px; }
+
+    /* Submit & navigation */
+    .btn-submit { width: 100%; padding: 16px; font-size: 1.05rem; }
+
+    .quiz-nav-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .quiz-nav-row .btn-secondary { flex: 1; padding: 13px 10px; }
+
+    #btn-finish {
+      display: none;
+      width: 100%;
+      margin-top: 14px;
+      padding: 15px;
+      font-size: 1.02rem;
+      background: var(--success);
+      box-shadow: 0 2px 8px rgba(16,185,129,.3);
+    }
+    #btn-finish:hover:not(:disabled) { background: #059669; }
+    #btn-finish.visible { display: block; }
+
+    /* ── Question Navigation Panel ──────────────────────────────────────── */
+    .nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      padding: 20px;
+    }
+    .nav-overlay.visible { display: flex; }
+
+    .nav-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn .25s ease;
+    }
+
+    .nav-box h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .nav-legend {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      font-size: .75rem;
+      color: var(--text-2);
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .nav-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot {
+      width: 12px; height: 12px; border-radius: 4px; display: inline-block;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+    }
+    .legend-dot.correct { background: var(--success-light); border-color: var(--success); }
+    .legend-dot.wrong   { background: var(--error-light); border-color: var(--error); }
+    .legend-dot.current { background: var(--primary-light); border-color: var(--primary); }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .nav-num-btn {
+      padding: 10px 0;
+      border-radius: var(--r-sm);
+      border: 2px solid var(--border);
+      background: var(--bg);
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text-2);
+      transition: transform .1s, border-color .15s;
+    }
+    .nav-num-btn:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .nav-num-btn.answered-correct { background: var(--success-light); border-color: var(--success); color: var(--success); }
+    .nav-num-btn.answered-wrong   { background: var(--error-light); border-color: var(--error); color: var(--error); }
+    .nav-num-btn.current { border-color: var(--primary); background: var(--primary-light); color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,.25); }
+
+    #btn-nav-close { width: 100%; padding: 13px; font-size: .95rem; }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       MODAL (정답/오답 피드백)
+    ═════════════════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 20px;
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .modal-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 40px 32px 36px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn .25s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.9) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-emoji { font-size: 52px; margin-bottom: 12px; }
+
+    .modal-verdict {
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .modal-box.correct .modal-verdict { color: var(--success); }
+    .modal-box.wrong   .modal-verdict { color: var(--error); }
+
+    .modal-explanation {
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 16px 18px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+
+    .explanation-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+    }
+    .explanation-label strong { color: var(--error); font-size: .95rem; }
+
+    .exp-text {
+      font-size: .9rem;
+      color: var(--text-1);
+      line-height: 1.65;
+    }
+
+    #btn-next { width: 100%; font-size: 1rem; padding: 14px; }
+    .modal-box.correct #btn-next { background: var(--success); box-shadow: 0 2px 8px rgba(16,185,129,.3); }
+    .modal-box.correct #btn-next:hover:not(:disabled) { background: #059669; }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       RESULT SCREEN
+    ═════════════════════════════════════════════════════════════════════ */
+    #screen-result {
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #EFF6FF 0%, #F1F5F9 100%);
+      padding: 40px 0;
+    }
+
+    .result-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 52px 44px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .result-emoji { font-size: 72px; margin-bottom: 20px; }
+
+    .result-score {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .result-grade {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-2);
+      margin-bottom: 32px;
+    }
+
+    .result-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 36px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: var(--r-sm);
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-num  { font-size: 1.75rem; font-weight: 900; color: var(--text-1); }
+    .stat-label { font-size: .8rem; color: var(--text-3); font-weight: 600; }
+    .stat-sep  { font-size: 1.5rem; color: var(--border); }
+
+    .result-encourage {
+      font-size: .9rem;
+      color: var(--text-2);
+      line-height: 1.7;
+      margin-bottom: 24px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+      border-radius: var(--r-sm);
+      border-left: 3px solid var(--primary);
+    }
+
+    #btn-wrong-note {
+      display: none;
+      width: 100%;
+      font-size: 1.05rem;
+      padding: 16px;
+      background: var(--error);
+      box-shadow: 0 2px 8px rgba(239,68,68,.3);
+      margin-bottom: 12px;
+    }
+    #btn-wrong-note:hover:not(:disabled) { background: #DC2626; }
+    #btn-wrong-note.visible { display: block; }
+
+    #btn-retry { width: 100%; font-size: 1.05rem; padding: 16px; }
+    #btn-home  { width: 100%; font-size: .95rem; padding: 14px; margin-top: 12px; }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       WRONG NOTE (오답노트) & STUDY (문제·정답 모아보기) SCREENS
+    ═════════════════════════════════════════════════════════════════════ */
+    #screen-wrong, #screen-study { background: var(--bg); }
+
+    .list-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .list-header-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .list-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-count-badge {
+      background: var(--error-light);
+      color: var(--error);
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 99px;
+    }
+    #screen-study .list-count-badge { background: var(--primary-light); color: var(--primary); }
+
+    .btn-back {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 9px 18px;
+      font-size: .875rem;
+      font-weight: 700;
+      color: var(--text-2);
+      white-space: nowrap;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-back:hover { border-color: var(--primary); color: var(--primary); }
+
+    .list-main {
+      flex: 1;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    .section-label {
+      font-size: .85rem;
+      font-weight: 800;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin: 28px 0 14px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    .review-card {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 26px 26px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .review-card.wrong-card { border-left: 4px solid var(--error); }
+
+    .review-q-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .review-q-num {
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: .05em;
+    }
+    .review-type-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+
+    .review-q-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    .review-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+
+    .review-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: var(--r-sm);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      font-size: .9rem;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+    .review-option .opt-num { font-weight: 800; flex-shrink: 0; color: var(--text-3); }
+
+    .review-option.is-answer {
+      background: var(--success-light);
+      border-color: var(--success);
+      color: var(--text-1);
+      font-weight: 600;
+    }
+    .review-option.is-answer .opt-num { color: var(--success); }
+
+    .review-option.is-mine {
+      background: var(--error-light);
+      border-color: var(--error);
+      color: var(--text-1);
+    }
+    .review-option.is-mine .opt-num { color: var(--error); }
+
+    .answer-tag {
+      font-size: .7rem;
+      font-weight: 800;
+      padding: 1px 8px;
+      border-radius: 99px;
+      margin-left: auto;
+      flex-shrink: 0;
+      align-self: center;
+      white-space: nowrap;
+    }
+    .answer-tag.tag-correct { background: var(--success); color: #fff; }
+    .answer-tag.tag-mine    { background: var(--error); color: #fff; }
+
+    .review-exp {
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 13px 16px;
+      font-size: .875rem;
+      color: var(--text-2);
+      line-height: 1.65;
+      border-left: 3px solid var(--primary);
+    }
+    .review-exp strong { color: var(--primary); font-size: .78rem; letter-spacing: .05em; display: block; margin-bottom: 3px; }
+
+    .wrong-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-2);
+    }
+    .wrong-empty .emoji { font-size: 64px; margin-bottom: 16px; }
+
+    .list-bottom-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .list-bottom-actions button { flex: 1; }
+
+    /* ── Responsive ─────────────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .pw-card, .start-card, .result-card { padding: 36px 24px; }
+      .question-card { padding: 24px 18px; }
+      .q-text { font-size: 1rem; }
+      .ox-circle { width: 64px; height: 64px; font-size: 32px; }
+      .modal-box { padding: 32px 20px 28px; }
+      .result-score { font-size: 2.8rem; }
+      .review-card { padding: 20px 16px; }
+      .nav-grid { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 1: 비밀번호
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-password" class="screen active">
+    <div class="pw-card">
+      <div class="pw-lock">🔒</div>
+      <h1>HBS13기 M4 데이터사이언스 퀴즈</h1>
+      <p class="pw-subtitle">HBS 13기 Module 4 데이터사이언스 온라인강의 핵심 내용을<br>스스로 점검하기 위해 만들어졌습니다.</p>
+      <p>접근하려면 비밀번호를 입력하세요</p>
+      <div class="pw-input-wrap">
+        <input id="pw-input" type="password" placeholder="비밀번호 입력" autocomplete="off">
+        <button id="btn-pw" class="btn-primary">확인</button>
+      </div>
+      <p id="pw-error"></p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 2: 시작
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-start" class="screen">
+    <div class="start-card">
+      <div class="start-icon">📊</div>
+      <h1>데이터사이언스 퀴즈</h1>
+      <p class="start-desc">총 66문항 · 객관식 38문항 + OX형 28문항</p>
+      <div class="start-meta">
+        <span>100점 만점</span>
+        <span class="sep">·</span>
+        <span>문항 무작위 출제</span>
+        <span class="sep">·</span>
+        <span>데이터사이언스</span>
+      </div>
+      <button id="btn-start" class="btn-primary">시험 시작하기</button>
+      <button id="btn-study" class="btn-secondary">📖 문제·정답 모아보기</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 3: 문제
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-quiz" class="screen">
+
+    <!-- 상단 헤더 / 진행바 -->
+    <header class="quiz-header">
+      <div class="header-inner">
+        <span class="question-counter">
+          <strong id="q-current">1</strong> / <span id="q-total">66</span>
+        </span>
+        <div class="progress-bar-wrap">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="q-type-badge" class="type-badge">객관식</span>
+        <button id="btn-nav-panel" title="문제 목록 열기">☰ 목록</button>
+      </div>
+    </header>
+
+    <!-- 문제 영역 -->
+    <main class="quiz-main">
+      <div class="question-card">
+        <p id="q-number-label" class="q-number-label">
+          <span id="q-number-text">문제 1</span>
+          <span id="answered-badge" class="answered-badge"></span>
+        </p>
+        <p id="q-text" class="q-text"></p>
+
+        <!-- OX 보기 -->
+        <div id="answer-ox" class="answer-area ox-area">
+          <button class="ox-btn" data-value="O">
+            <span class="ox-circle">O</span>
+            <span>맞다 (O)</span>
+          </button>
+          <button class="ox-btn" data-value="X">
+            <span class="ox-circle">X</span>
+            <span>틀리다 (X)</span>
+          </button>
+        </div>
+
+        <!-- 객관식 보기 -->
+        <div id="answer-mc" class="answer-area mc-area" style="display:none">
+          <button class="mc-btn" data-index="0">
+            <span class="mc-num">①</span>
+            <span class="mc-text"></span>
+          </button>
+          <button class="mc-btn" data-index="1">
+            <span class="mc-num">②</span>
+            <span class="mc-text"></span>
+          </button>
+          <button class="mc-btn" data-index="2">
+            <span class="mc-num">③</span>
+            <span class="mc-text"></span>
+          </button>
+          <button class="mc-btn" data-index="3">
+            <span class="mc-num">④</span>
+            <span class="mc-text"></span>
+          </button>
+        </div>
+
+        <!-- 답변 완료된 문제 다시 볼 때 인라인 해설 -->
+        <div id="inline-explanation" class="inline-explanation">
+          <p class="explanation-label">💡 해설</p>
+          <p id="inline-exp-text" class="exp-text"></p>
+        </div>
+      </div>
+
+      <!-- 제출 버튼 -->
+      <button id="btn-submit" class="btn-primary btn-submit" disabled>제출하기</button>
+
+      <!-- 이전/다음 이동 버튼 -->
+      <div class="quiz-nav-row">
+        <button id="btn-prev" class="btn-secondary">← 이전 문제</button>
+        <button id="btn-next-q" class="btn-secondary">다음 문제 →</button>
+      </div>
+
+      <!-- 전체 답변 완료 시 결과 보기 -->
+      <button id="btn-finish" class="btn-primary">🏁 결과 보기</button>
+    </main>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PANEL: 문제 번호 이동
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="nav-overlay" class="nav-overlay" role="dialog" aria-modal="true">
+    <div class="nav-box">
+      <h3>문제 이동</h3>
+      <div class="nav-legend">
+        <span><span class="legend-dot"></span> 미응답</span>
+        <span><span class="legend-dot correct"></span> 정답</span>
+        <span><span class="legend-dot wrong"></span> 오답</span>
+        <span><span class="legend-dot current"></span> 현재</span>
+      </div>
+      <div id="nav-grid" class="nav-grid"></div>
+      <button id="btn-nav-close" class="btn-secondary">닫기</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 4: 결과
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-result" class="screen">
+    <div class="result-card">
+      <div id="result-emoji" class="result-emoji">🏆</div>
+      <h2 id="result-score" class="result-score">--점</h2>
+      <p id="result-grade" class="result-grade"></p>
+      <div class="result-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="stat-correct">0</span>
+          <span class="stat-label">정답</span>
+        </div>
+        <span class="stat-sep">|</span>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-wrong">0</span>
+          <span class="stat-label">오답</span>
+        </div>
+        <span class="stat-sep">|</span>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-total">66</span>
+          <span class="stat-label">전체</span>
+        </div>
+      </div>
+      <p class="result-encourage">🎉 좋은 결과 있으시길 바라겠습니다. 파이팅!</p>
+      <button id="btn-wrong-note" class="btn-primary">📕 오답노트 보기</button>
+      <button id="btn-retry" class="btn-primary">다시 풀기</button>
+      <button id="btn-home" class="btn-secondary">처음 화면으로</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 5: 오답노트
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-wrong" class="screen">
+    <header class="list-header">
+      <div class="list-header-inner">
+        <span class="list-title">📕 오답노트 <span id="wrong-count-badge" class="list-count-badge">0문항</span></span>
+        <button id="btn-wrong-back" class="btn-back">← 결과로</button>
+      </div>
+    </header>
+    <main id="wrong-list" class="list-main"></main>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCREEN 6: 문제·정답 모아보기
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-study" class="screen">
+    <header class="list-header">
+      <div class="list-header-inner">
+        <span class="list-title">📖 문제·정답 모아보기 <span class="list-count-badge">총 66문항</span></span>
+        <button id="btn-study-back" class="btn-back">← 처음으로</button>
+      </div>
+    </header>
+    <main id="study-list" class="list-main"></main>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       MODAL: 정답/오답 피드백
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
+    <div id="modal-box" class="modal-box">
+      <div id="modal-emoji" class="modal-emoji"></div>
+      <h3 id="modal-verdict" class="modal-verdict"></h3>
+
+      <!-- 정답/오답 모두 해설 표시 -->
+      <div id="modal-explanation" class="modal-explanation">
+        <p class="explanation-label" id="correct-answer-line">
+          정답: <strong id="modal-correct-answer"></strong>
+        </p>
+        <p id="modal-exp-text" class="exp-text"></p>
+      </div>
+
+      <button id="btn-next" class="btn-primary">다음 문제 →</button>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = 'HBS13';
+
+    const QUESTIONS = [
+      // ── 객관식 문제 ─────────────────────────────────────────────────────
+      {
+        id: 1, type: 'mc',
+        text: '데이터로부터 1차적인 통찰을 얻기 위해 검토하는 것이 아닌 것은?',
+        options: ['변수들 간의 인과관계', '변수들에 대한 빈도', '변수들에 대한 평균', '변수들 간의 상관관계'],
+        answer: 0,
+        explanation: '1차 통찰은 주로 빈도, 평균, 상관관계로 얻으며 인과관계는 더 심층적인 분석이 필요하다.'
+      },
+      {
+        id: 2, type: 'mc',
+        text: '다음 중 비율측정에 해당하는 것은?',
+        options: ['상표의 구분', '판매지역의 구분', '선호도', '생산원가'],
+        answer: 3,
+        explanation: '비율척도는 절대적 0과 사칙연산이 가능한 생산원가가 해당된다.'
+      },
+      {
+        id: 3, type: 'mc',
+        text: '온라인 공간에 공개되어있는 정보를 수집하는 기술은?',
+        options: ['다크웹', '웹서버', '웹스크래핑', '월드와이드웹'],
+        answer: 2,
+        explanation: '웹스크래핑은 공개된 웹페이지 정보를 자동 수집하는 기술이다.'
+      },
+      {
+        id: 4, type: 'mc',
+        text: '다음 중 다중회귀분석을 사용하는 가장 중요한 이유는?',
+        options: ['두 변수간의 더 순수한 관계를 추정', '데이터의 크기를 늘리기 위해', '시각화의 입체성', '통계적 정확성 향상'],
+        answer: 0,
+        explanation: '다중회귀는 여러 변수를 함께 고려해 특정 변수와 종속변수 간의 더 순수한 관계를 파악하게 해준다.'
+      },
+      {
+        id: 5, type: 'mc',
+        text: "시계열 데이터를 분석하는 가장 기초적인 기법으로 '어제의 나'와 '오늘의 나'를 설명하는 기법은?",
+        options: ['AR', 'Logistic', 'Prediction', 'Co-Movement'],
+        answer: 0,
+        explanation: 'AR(자기회귀)모델은 과거 시점의 데이터가 현재에 영향을 준다는 가장 기본적인 시계열 모델이다.'
+      },
+      {
+        id: 6, type: 'mc',
+        text: '시계열 분석법으로 미래를 예측할 때 더 먼 미래를 예측할수록 신뢰구간이 더 넓어지는 이유는?',
+        options: ['유의확률이 상승하므로', '신뢰수준이 증가하므로', '불확실성이 커지므로', '데이터를 더 많이 사용하므로'],
+        answer: 2,
+        explanation: '더 먼 미래를 예측할수록 불확실성이 커지므로 신뢰구간이 넓어진다.'
+      },
+      {
+        id: 7, type: 'mc',
+        text: '범죄율과 아이스크림 판매량 사이에 인과관계가 아닌 단순 상관관계만 존재하는 이유는?',
+        options: ['누락된 변수로부터의 편향', '회귀분석을 잘못된 방식으로 사용', '시계열 분석의 미사용', '데이터의 정확성 결여'],
+        answer: 0,
+        explanation: '공통 원인(기온)과 같은 누락된 변수가 두 변수 모두에 영향을 미치기 때문이다.'
+      },
+      {
+        id: 8, type: 'mc',
+        text: '다음 중 무작위 실험의 장점이 아닌 것은?',
+        options: ['완벽한 인과관계의 판별', '특별한 고급 기법이 불필요', '단순 비교로 결과 도출', '거의 모든 경우에 사용가능'],
+        answer: 3,
+        explanation: '무작위 실험은 윤리적·현실적 제약으로 모든 경우에 적용이 불가능하다.'
+      },
+      {
+        id: 9, type: 'mc',
+        text: '다음 중 차세대 클라우드 환경과 관련이 없는 것은?',
+        options: ['웹하드 서비스', '아마존 웹서비스', '미국 국방부 전산화 사업', '마이크로소프트의 새로운 비지니스모델'],
+        answer: 0,
+        explanation: '웹하드 서비스는 과거의 제한적인 방식의 클라우드 서비스로, 최근의 클라우드 환경과 비교하면 지극히 한정적인 기능만을 제공한다.'
+      },
+      {
+        id: 10, type: 'mc',
+        text: '구글이 디지털광고시장에서 큰 성공을 거둔 비결은?',
+        options: ['Gmail 서비스의 큰 성공', '연구중심의 기업문화', 'Google이 제공하는 서비스들로부터 수집된 개인 데이터', 'Youtube 광고의 큰 성공'],
+        answer: 2,
+        explanation: '방대한 사용자 데이터에 기반한 맞춤형 광고가 구글 성공의 핵심이다.'
+      },
+      {
+        id: 11, type: 'mc',
+        text: '다음 중 최근 데이터 분석의 영역으로 확장되고 있는 분야는?',
+        options: ['음향 데이터', '법률 서비스', '패션 사업', '모두 그렇다'],
+        answer: 3,
+        explanation: '과거에는 적합하지 않다고 여겨졌던 많은 분야들이 데이터를 활용한 혁신을 경험하고 있고 여전히 진행중이다.'
+      },
+      {
+        id: 12, type: 'mc',
+        text: '다음 중 서열측정에 해당하는 것은?',
+        options: ['TV시청률', '가격', '응답자의 태도', '소비자의 성별 구분'],
+        answer: 2,
+        explanation: 'TV시청률과 가격은 비율측정, 소비자의 성별 구분은 명목측정에 해당한다.'
+      },
+      {
+        id: 13, type: 'mc',
+        text: '다음 중 연령별 분석을 위한 데이터의 가치가 가장 큰 경우는?',
+        options: ['100% 20대 고객', '90% 60대 / 10% 70대 고객', '98% 20대 / 1% 30대 / 1% 40대 고객', '50% 20대 / 50% 30대 고객'],
+        answer: 3,
+        explanation: '연령 그룹이 고르게 분포(50%/50%)되어 있어야 그룹 간 비교·분석이 가능해 데이터의 가치가 가장 크다. 한쪽에 치우친 데이터는 변동성이 부족해 분석 가치가 낮다.'
+      },
+      {
+        id: 14, type: 'mc',
+        text: '가공되기 전 데이터가 처음 수집된 상태로 존재하는 데이터는?',
+        options: ['원시 데이터', '집계 데이터', '딥러닝 데이터', '패널 데이터'],
+        answer: 0,
+        explanation: '원시 데이터(Raw Data)는 가공되기 전 처음 수집된 상태 그대로의 데이터를 의미한다.'
+      },
+      {
+        id: 15, type: 'mc',
+        text: '의사결정나무를 무작위로 여러 번 사용하여 특정 데이터에만 높은 의존성을 가지는 약점을 보완한 기법은?',
+        options: ['장바구니 분석', '다중나무분석', '랜덤 포레스트', '랜덤 네트워크'],
+        answer: 2,
+        explanation: '랜덤 포레스트는 의사결정나무를 무작위로 여러 번 반복 사용하여 특정 데이터에 대한 과도한 의존(오버피팅)을 보완한 기법이다.'
+      },
+      {
+        id: 16, type: 'mc',
+        text: '클러스터링 분석법의 특징이 아닌 것은?',
+        options: [
+          '데이터를 몇 개의 그룹으로 분류하는 분석',
+          '분석 결과로부터 직접적인 시사점이 도출되지 않음',
+          '데이터의 크기가 큰 경우 사용되기 힘듦',
+          '메인 분석이 되기는 힘들지만 보조자료로 사용될 수 있음'
+        ],
+        answer: 2,
+        explanation: '클러스터링은 데이터의 크기가 큰 경우에도 사용 가능하다. 직접적인 시사점 도출은 어려워 주로 보조자료로 활용된다.'
+      },
+      {
+        id: 17, type: 'mc',
+        text: '다음 중 최신 빅데이터 이슈와 관련이 없는 것은?',
+        options: ['Mass Digital Storage의 법칙', 'Metcalfe의 법칙', 'GPU컴퓨팅', 'Large Number의 1법칙'],
+        answer: 3,
+        explanation: "저장기술의 발전(Mass Digital Storage), 네트워크 효과(Metcalfe의 법칙), GPU컴퓨팅은 빅데이터 성장과 관련이 있으나 'Large Number의 1법칙'은 관련이 없다."
+      },
+      {
+        id: 18, type: 'mc',
+        text: '기업이 광고를 타겟팅할 때 누구에게 보여주어야 가장 효과적인가?',
+        options: [
+          '광고를 가장 집중해서 보는 소비자',
+          '구매력이 가장 큰 소비자',
+          '우리 제품을 모르는 소비자',
+          '광고를 보여주어 구매하려고 마음을 바꾸게될 소비자'
+        ],
+        answer: 3,
+        explanation: '광고의 효과는 광고로 인해 구매 의사가 바뀌는 소비자에게 보여줄 때 가장 크다.'
+      },
+      {
+        id: 19, type: 'mc',
+        text: '데이터 탐색에서 하지 않는 것은?',
+        options: [
+          '연구문제와 관련된 변수들이 잘 정의 되었는지 확인한다.',
+          '우리가 설정한 가설들이 얻어진 데이터를 통해 검증이 가능한지를 알아본다.',
+          '우리가 얻은 데이터로 예측이 가능한가에 대해 검토한다.',
+          '회귀분석을 하여 인과관계를 추출한다'
+        ],
+        answer: 3,
+        explanation: '데이터 탐색 단계에서는 변수 정의, 가설 검증 가능성, 예측 가능성을 검토하며, 회귀분석을 통한 인과관계 추출은 본격적인 분석 단계에 해당한다.'
+      },
+      {
+        id: 20, type: 'mc',
+        text: '다음 중 데이터 과학 수행단계 중 맞지 않는 것은?',
+        options: ['데이터 검색', '데이터 분석', '문제의 정의', '데이터 정리'],
+        answer: 0,
+        explanation: "데이터 과학 수행단계는 문제의 정의, 데이터 수집, 데이터 정리, 데이터 분석 등으로 구성되며 '데이터 검색'은 해당하지 않는다."
+      },
+      {
+        id: 21, type: 'mc',
+        text: '여러 자료들 사이의 관계를 동시에 고려할 수 있게 해주는 회귀분석기법은?',
+        options: ['다중회귀분석', '시계열회귀분석', '다각화회귀분석', '인과성회귀분석'],
+        answer: 0,
+        explanation: '다중회귀분석은 하나의 종속변수와 여러 개의 독립변수를 사용하여 여러 개의 독립변수의 영향을 동시에 제어할 수 있게 해주는 기법이다.'
+      },
+      {
+        id: 22, type: 'mc',
+        text: '분석의 목표 설정이 선행되지 않은 잘못된 분석 절차는 어떤 문제를 발생시키는가?',
+        options: [
+          '분석의 정확성이 크게 떨어질 수 있다.',
+          '의미없는 분석을 여러 번 반복할 수 있다.',
+          '데이터의 크기가 작을 수 있다.',
+          '데이터의 변동성이 너무 작을 수 있다.'
+        ],
+        answer: 1,
+        explanation: '분석의 목표 설정이 선행되지 않으면 의미없는 분석을 여러 번 반복하게 되는 문제가 발생한다.'
+      },
+      {
+        id: 23, type: 'mc',
+        text: '가입 후 첫 한달 무료 서비스를 제공하는 온라인 스트리밍 기업의 데이터 분석시 대표적인 문제는 무엇인가?',
+        options: ['사용자간 매칭 문제', '정보의 유실 문제', '데이터 변동성의 문제', '측정의 단순화 문제'],
+        answer: 0,
+        explanation: '무료 체험 기간의 사용자와 이후 유료 가입 사용자가 동일인인지 연결하기 어려운 사용자간 매칭 문제가 대표적으로 발생한다.'
+      },
+      {
+        id: 24, type: 'mc',
+        text: '상자그림이 히스토그램과 다른 점은 무엇인가?',
+        options: ['분포의 시각화', '색상의 다양함', '3D 입체감', '이상치의 시각화'],
+        answer: 3,
+        explanation: '상자그림(Box Plot)은 히스토그램과 달리 이상치(outlier)를 시각적으로 표현할 수 있다.'
+      },
+      {
+        id: 25, type: 'mc',
+        text: '로지스틱회귀분석은 어떠한 종류의 자료에 사용 가능한가?',
+        options: [
+          '공장 등 생산라인 관련 데이터',
+          '0/1, A/B등 두 수준 중 하나가 선택되는 데이터',
+          '다양한 값을 가지는 매출 데이터',
+          '한글이나 영어 문장을 포함하는 텍스트 데이터'
+        ],
+        answer: 1,
+        explanation: '로지스틱회귀분석은 0/1, A/B 등 두 수준 중 하나가 선택되는 이진형 데이터에 사용된다.'
+      },
+      {
+        id: 26, type: 'mc',
+        text: '2차 자료의 장점이 아닌것은?',
+        options: ['수집이 용이하다', '비용이 적게 든다.', '나의 조사 목적에 정확히 부응하는 자료이다', '데이터 수집시간이 상대적으로 적게든다.'],
+        answer: 2,
+        explanation: '2차 자료는 수집이 용이하고 비용과 시간이 적게 들지만, 나의 조사 목적에 정확히 부응하지 않을 수 있다는 단점이 있다.'
+      },
+      {
+        id: 27, type: 'mc',
+        text: '기초 분석에서 가장 중요한 요소는 무엇인가?',
+        options: ['최신 분석 기법', '시각화의 구체성', '커뮤니케이션의 용이성', '엄밀한 통계적 이론'],
+        answer: 2,
+        explanation: '기초 분석에서 가장 중요한 요소는 분석 결과를 누구나 쉽게 이해하고 전달할 수 있는 커뮤니케이션의 용이성이다.'
+      },
+      {
+        id: 28, type: 'mc',
+        text: '다음 중 머신러닝의 비지도형학습으로 분류할 수 있는 기법은?',
+        options: ['선형회귀분석', '로지스틱회귀분석', '랜덤포레스트', '클러스터링분석'],
+        answer: 3,
+        explanation: '클러스터링분석은 정답(레이블) 없이 데이터를 그룹화하는 대표적인 비지도형 학습이다.'
+      },
+      {
+        id: 29, type: 'mc',
+        text: '특정 데이터에 너무 잘 맞게 학습할 경우 역설적으로 그 예측력이 떨어진다는 뜻의 용어는?',
+        options: ['오버러닝', '오버피팅', '페이크러닝', '랜덤피팅'],
+        answer: 1,
+        explanation: '오버피팅(과적합)은 특정 데이터에 너무 잘 맞게 학습되어 새로운 데이터에 대한 예측력이 떨어지는 현상이다.'
+      },
+      {
+        id: 30, type: 'mc',
+        text: '데이터를 전체로 보지 않고 부분별로 나누어서 이해하고 분석하는 것의 중요성을 이야기하는 용어는?',
+        options: ['심슨의 머신러닝', '심슨의 패러독스', '심슨의 법칙', '심슨의 통계분석학'],
+        answer: 1,
+        explanation: '심슨의 패러독스는 전체 데이터의 경향과 부분별 데이터의 경향이 다르게 나타날 수 있음을 보여주는 개념이다.'
+      },
+      {
+        id: 31, type: 'mc',
+        text: '다음 중 회귀분석법에서 중요한 가정이라고 볼 수 없는 것은?',
+        options: [
+          '독립변수와 설명되지 않는 오차항과의 독립성이다',
+          '어떤 패턴도 존재하지 않는다는 가정이다',
+          '서로 어떤 연관성도 없음을 의미한다',
+          '두 변수 간 매우 일정한 패턴이 있음을 가정한다'
+        ],
+        answer: 3,
+        explanation: '회귀분석은 독립변수와 오차항의 독립성, 즉 어떤 패턴이나 연관성도 없음을 가정하며, 일정한 패턴이 있음을 가정하지 않는다.'
+      },
+      {
+        id: 32, type: 'mc',
+        text: '교호작용이 핵심 아이디어로 적용된 대표적인 경영 전략 사례는?',
+        options: ['가격 차별화', '경쟁에서의 우위', '디지털 광고 타겟팅', '브랜드 혁신 전략'],
+        answer: 2,
+        explanation: '디지털 광고 타겟팅은 광고 효과가 소비자 특성에 따라 달라진다는 교호작용의 아이디어가 적용된 대표적인 사례이다.'
+      },
+      {
+        id: 33, type: 'mc',
+        text: '다음 중 전형적인 시계열 데이터의 특성이 가장 강하게 나타나는 데이터는?',
+        options: ['주가데이터', '매출데이터', '의료분야데이터', '온라인유저데이터'],
+        answer: 0,
+        explanation: '주가데이터는 연결된 시점 간의 연결성이 강한 전형적인 시계열 데이터이다.'
+      },
+      {
+        id: 34, type: 'mc',
+        text: '시계열 데이터에서 비슷한 패턴이 주기적으로 나타나는 현상을 무엇이라고 하는가?',
+        options: ['규칙성', '연결성', '관계성', '계절성'],
+        answer: 3,
+        explanation: '계절성(Seasonality)은 시계열 데이터에서 비슷한 패턴이 주기적으로 반복되는 특성이다.'
+      },
+      {
+        id: 35, type: 'mc',
+        text: 'Hague컨설팅 그룹의 기차표 Conjoint분석 사례로부터 무엇을 알 수 있었는가?',
+        options: ['새로운 열차 기술의 개발', '새로운 열차 가격의 설정', '새로운 고객 유치 전략', '더 중요한 고객의 판별'],
+        answer: 1,
+        explanation: 'Hague 컨설팅 그룹은 Conjoint 분석을 통해 새로운 기차표 가격 설정에 대한 시사점을 얻었다.'
+      },
+      {
+        id: 36, type: 'mc',
+        text: '변수간의 관계가 선형이 아닌 비선형 곡선 형태의 관계를 고려할 수 있게 해주는 분석기법은?',
+        options: ['다중회귀분석', '다항회귀분석', '쌍곡선회귀분석', '포아송회귀분석'],
+        answer: 1,
+        explanation: '다항회귀분석은 변수간의 비선형 곡선 형태의 관계를 고려할 수 있게 해주는 기법이다.'
+      },
+      {
+        id: 64, type: 'mc',
+        text: '비교 분석시 두 그룹간의 차이가 통계적으로 의미있는지 알려주는 지표는?',
+        options: ['유의확률', '오차한계', '신뢰구간', '상관관계'],
+        answer: 0,
+        explanation: '유의확률(p-value)은 두 그룹간의 차이가 우연이 아니라 통계적으로 의미있는 차이인지를 알려주는 지표이다.'
+      },
+      {
+        id: 65, type: 'mc',
+        text: '연관성 분석에서 중립연관성의 경우는?',
+        options: ['Lift가 0일때', 'Lift가 1일때', 'Support가 0일때', 'Support가 1일때'],
+        answer: 1,
+        explanation: 'Lift가 1이면 두 항목이 서로 아무런 연관성이 없는 중립(독립)적인 관계임을 의미한다. Lift가 1보다 크면 양의 연관성, 1보다 작으면 음의 연관성을 나타낸다.'
+      },
+
+      // ── OX 문제 ─────────────────────────────────────────────────────────
+      {
+        id: 37, type: 'ox',
+        text: '데이터 분석에서 시간과 비용의 효율성을 위해 1차자료를 사용하는것이 좋다.',
+        answer: 'X',
+        explanation: '1차자료는 정확하지만 시간과 비용이 많이 들어 효율적이지 않을 수 있다.'
+      },
+      {
+        id: 38, type: 'ox',
+        text: '집계 데이터는 일반적으로 데이터 분석에 가장 잘 활용될 수 있다',
+        answer: 'X',
+        explanation: '데이터가 집계되는 과정에서 많은 유용한 정보들이 소실되어 데이터 분석에 적절하지 않은 경우가 많다.'
+      },
+      {
+        id: 39, type: 'ox',
+        text: '어떤 독립변수를 사용하여 회귀분석을 실시할지 결정하려면, 회귀분석을 각각 실시하여 결정계수가 작은 분석을 선택하면 된다',
+        answer: 'X',
+        explanation: '결정계수가 큰 분석이 더 설명력이 높아 올바른 선택이다.'
+      },
+      {
+        id: 40, type: 'ox',
+        text: '다양한 회귀분석 기법이 존재하고 각각의 특수 기법을 이해하는데 긴 시간을 할애하여 꾸준히 학습해야한다',
+        answer: 'X',
+        explanation: '기본적인 구조와 핵심 개념은 거의 동일하므로 새로운 분석기법을 마주하게 되더라도 쉽게 이해할 수 있다.'
+      },
+      {
+        id: 41, type: 'ox',
+        text: '인과관계 여부에 대한 분석은 특히 기업 데이터 분석에서 큰 중요성을 갖는다',
+        answer: 'O',
+        explanation: '기업은 인과관계 분석을 통해 효과적인 의사결정을 내린다.'
+      },
+      {
+        id: 42, type: 'ox',
+        text: '전자책 출시 당시 벌어진 \'자연실험 상황\'을 통해 "전자책 발매는 종이책 매출에 악영향을 미친다"라는 주장이 진실로 밝혀졌다',
+        answer: 'X',
+        explanation: '자연실험 결과가 일관적이지 않아 전자책의 영향이 확정적이지 않다.'
+      },
+      {
+        id: 43, type: 'ox',
+        text: '연관성분석의 Lift는 Support보다 더 연관성을 효과적으로 나타내는 지표이다.',
+        answer: 'O',
+        explanation: 'Lift는 기대 빈도 대비 실제 발생 빈도의 비율로 연관성의 강도를 잘 나타낸다.'
+      },
+      {
+        id: 44, type: 'ox',
+        text: '의사결정나무는 종속변수가 이산형일때만 사용가능하다',
+        answer: 'X',
+        explanation: '의사결정나무는 분류(이산형)와 회귀(연속형) 문제 모두에 사용 가능하다.'
+      },
+      {
+        id: 45, type: 'ox',
+        text: '가격할인은 특정 연령이나 성별의 고객에게 제공하는 것이 효과적이다',
+        answer: 'X',
+        explanation: '과거에는 특정 그룹의 고객들을 타겟으로 진행하였으나 최근에는 누구에게나 제공하는 것이 가장 효과적인지 직접 분석을 실시한다.'
+      },
+      {
+        id: 46, type: 'ox',
+        text: '교호작용 분석 기법은 관계가 경우에 따라 달라질 수 있음을 고려하게 해준다.',
+        answer: 'O',
+        explanation: '교호작용 분석은 변수 간의 관계가 조건이나 경우에 따라 달라질 수 있음을 고려하게 해준다.'
+      },
+      {
+        id: 47, type: 'ox',
+        text: '로지스틱회귀분석은 각각의 경우에 대한 확률을 각각 예측할 수 있다.',
+        answer: 'O',
+        explanation: '로지스틱회귀분석은 각각의 경우(범주)가 발생할 확률을 예측할 수 있다.'
+      },
+      {
+        id: 48, type: 'ox',
+        text: '유저의 친구 혹은 팔로워의 숫자는 소셜네트워크에서 절대적으로 가장 중요하다',
+        answer: 'X',
+        explanation: '친구·팔로워의 숫자보다 네트워크 내에서의 위치나 영향력 등 다양한 요소가 함께 중요하다.'
+      },
+      {
+        id: 49, type: 'ox',
+        text: 'NikelD 사례는 브랜드 이미지 관리가 얼마나 중요한지 보여준다.',
+        answer: 'X',
+        explanation: 'NikeID 사례는 개인 레벨의 데이터가 얼마나 가치있는지를 보여주며, 그 데이터가 초개인화 맞춤형 전략에 어떻게 사용될 수 있는지를 보여준다.'
+      },
+      {
+        id: 50, type: 'ox',
+        text: '2차 자료 수집 전에 1차 자료의 존재여부 및 사용가능성을 확인해야 한다.',
+        answer: 'X',
+        explanation: '순서가 반대이다. 1차 자료 수집 전에 이미 존재하는 2차 자료의 존재여부 및 사용가능성을 먼저 확인해야 한다.'
+      },
+      {
+        id: 51, type: 'ox',
+        text: '넓은 의미의 데이터는 사람, 기계에 의한 사용 가능한 모든 기록물을 의미한다.',
+        answer: 'O',
+        explanation: '넓은 의미의 데이터는 사람과 기계에 의해 사용 가능한 모든 기록물을 의미한다.'
+      },
+      {
+        id: 52, type: 'ox',
+        text: '매우 높은 수준의 숙련된 기술자가 아니더라도 웹에 공개되어있는 데이터를 수집하는 것이 가능하다',
+        answer: 'O',
+        explanation: '웹스크래핑 도구 등의 발달로 고도로 숙련된 기술자가 아니어도 공개된 웹 데이터의 수집이 가능하다.'
+      },
+      {
+        id: 53, type: 'ox',
+        text: 'A기업의 유튜브 광고를 본 사람과 보지않은 사람으로 나누어 구매율을 비교하면 광고효과를 알아낼 수 있다.',
+        answer: 'X',
+        explanation: '두 그룹간에 구조적인 차이가 존재할 가능성이 크므로 두 그룹의 구매율 차이는 광고때문이 아니라 다른 고객 특성때문일 가능성이 크다.'
+      },
+      {
+        id: 54, type: 'ox',
+        text: '토픽모델링에서 Bigram을 사용함으로서 텍스트 분석의 정확성을 향상시킬 수 있다.',
+        answer: 'O',
+        explanation: 'Bigram(두 단어 묶음)을 사용하면 단어 간의 결합 의미를 반영하여 텍스트 분석의 정확성을 향상시킬 수 있다.'
+      },
+      {
+        id: 55, type: 'ox',
+        text: '엔비디아는 빅데이터 컴퓨팅 분야의 성장과 관련이 있는 기업이다.',
+        answer: 'O',
+        explanation: '엔비디아는 GPU컴퓨팅을 통해 빅데이터 컴퓨팅 분야의 성장과 밀접한 관련이 있는 기업이다.'
+      },
+      {
+        id: 56, type: 'ox',
+        text: '딥러닝은 머신러닝보다 더 큰 범위의 개념이다.',
+        answer: 'X',
+        explanation: '딥러닝은 머신러닝의 하위 개념으로, 머신러닝이 더 큰 범위의 개념이다.'
+      },
+      {
+        id: 57, type: 'ox',
+        text: '제품 가격 요인의 분석시 가격 변동이 얼마나 존재하는지가 분석의 매우 중요한 요소이다',
+        answer: 'O',
+        explanation: '가격 변동이 얼마나 존재하는지가 중요한 요소이지만, 많은 제품들이 가격을 오랜 기간 고정시키는 판매 방식을 취하고 있어 가격 변동이 존재하지 않는 경우가 많아 가격관련 분석의 어려움이 존재한다.'
+      },
+      {
+        id: 58, type: 'ox',
+        text: '알파고의 경우는 머신러닝의 지도형학습으로 분류된다',
+        answer: 'X',
+        explanation: '알파고는 스스로 대국을 반복하며 학습하는 강화학습 기반으로, 지도형학습으로 분류되지 않는다.'
+      },
+      {
+        id: 59, type: 'ox',
+        text: '최근 패션업계에서도 데이터 활용의 바람이 불고 있다.',
+        answer: 'O',
+        explanation: 'ZARA 등의 사례처럼 최근 패션업계에서도 데이터 활용의 바람이 불고 있다.'
+      },
+      {
+        id: 60, type: 'ox',
+        text: 'ZARA는 공격적 광고를 통한 마케팅 관리 방식을 이용하여 성공하였다',
+        answer: 'X',
+        explanation: 'ZARA는 공격적 광고가 아니라 데이터에 기반한 빠른 생산·재고 관리 방식으로 성공하였다.'
+      },
+      {
+        id: 61, type: 'ox',
+        text: '시계열 데이터의 가장 큰 특징은 연결된 두 시점의 자료의 연결성에 있다',
+        answer: 'O',
+        explanation: '시계열 데이터의 가장 큰 특징은 연결된 두 시점의 자료의 연결성에 있다.'
+      },
+      {
+        id: 62, type: 'ox',
+        text: '2차 자료는 연구자가 현재 진행하고 있는 연구프로젝트의 문제를 해결하기위해 새롭게 모은 데이터를 의미한다',
+        answer: 'X',
+        explanation: '현재의 연구 문제를 해결하기 위해 새롭게 모은 데이터는 1차 자료이며, 2차 자료는 다른 목적을 위해 이미 수집되어 있는 자료를 의미한다.'
+      },
+      {
+        id: 63, type: 'ox',
+        text: '기초 분석의 경우 너무 단순화되어 있어 큰 의미를 갖기 힘들다',
+        answer: 'X',
+        explanation: '데이터의 품질이 우수한 경우 기초 분석 자체로도 큰 의미있는 결과가 도출되는 경우가 많다.'
+      },
+      {
+        id: 66, type: 'ox',
+        text: 'Data Translator는 데이터 분석으로부터 얻은 결과를 비즈니스에 의미있는 결과로 바꾸어주는 사람들을 말한다.',
+        answer: 'O',
+        explanation: 'Data Translator는 데이터 분석 결과를 비즈니스 언어로 해석하여 실질적인 의사결정과 전략에 활용될 수 있도록 연결하는 역할을 한다.'
+      }
+    ];
+
+    // ── 상태 ────────────────────────────────────────────────────────────────
+    const state = {
+      questions: [],
+      currentIndex: 0,
+      selectedAnswer: null,
+      // 문제별 응답 기록: { selected, correct } 또는 null(미응답)
+      records: []
+    };
+
+    // ── 유틸 ────────────────────────────────────────────────────────────────
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function answeredCount() {
+      return state.records.filter(r => r !== null).length;
+    }
+
+    function correctCount() {
+      return state.records.filter(r => r && r.correct).length;
+    }
+
+    function allAnswered() {
+      return answeredCount() === state.questions.length;
+    }
+
+    function answerLabel(q) {
+      if (q.type === 'ox') return q.answer;
+      const nums = ['①', '②', '③', '④'];
+      return `${nums[q.answer]} ${q.options[q.answer]}`;
+    }
+
+    function selectedLabel(q, selected) {
+      if (q.type === 'ox') return selected;
+      const nums = ['①', '②', '③', '④'];
+      return `${nums[selected]} ${q.options[selected]}`;
+    }
+
+    // ── 비밀번호 ───────────────────────────────────────────────────────────
+    function checkPassword() {
+      const input = document.getElementById('pw-input').value.trim();
+      if (input === PASSWORD) {
+        showScreen('screen-start');
+      } else {
+        const err = document.getElementById('pw-error');
+        err.textContent = '비밀번호가 올바르지 않습니다.';
+        err.style.display = 'block';
+        document.getElementById('pw-input').value = '';
+        document.getElementById('pw-input').focus();
+      }
+    }
+
+    // ── 퀴즈 초기화 ────────────────────────────────────────────────────────
+    function init() {
+      state.questions = shuffle(QUESTIONS);
+      state.currentIndex = 0;
+      state.selectedAnswer = null;
+      state.records = new Array(QUESTIONS.length).fill(null);
+      showScreen('screen-quiz');
+      renderQuestion();
+    }
+
+    // ── 문제 렌더링 ────────────────────────────────────────────────────────
+    function renderQuestion() {
+      const q = state.questions[state.currentIndex];
+      const num = state.currentIndex + 1;
+      const total = state.questions.length;
+      const record = state.records[state.currentIndex];
+      const isAnswered = record !== null;
+
+      document.getElementById('q-current').textContent = num;
+      document.getElementById('q-total').textContent = total;
+      document.getElementById('progress-bar').style.width =
+        `${(answeredCount() / total) * 100}%`;
+      document.getElementById('q-type-badge').textContent = q.type === 'ox' ? 'OX형' : '객관식';
+      document.getElementById('q-number-text').textContent = `문제 ${num}`;
+      document.getElementById('q-text').textContent = q.text;
+
+      // 응답 여부 배지
+      const badge = document.getElementById('answered-badge');
+      badge.className = 'answered-badge';
+      if (isAnswered) {
+        badge.classList.add(record.correct ? 'correct' : 'wrong');
+        badge.textContent = record.correct ? '✓ 정답 처리됨' : '✗ 오답 처리됨';
+      }
+
+      const oxArea = document.getElementById('answer-ox');
+      const mcArea = document.getElementById('answer-mc');
+
+      if (q.type === 'ox') {
+        oxArea.style.display = 'grid';
+        mcArea.style.display = 'none';
+        document.querySelectorAll('.ox-btn').forEach(b => {
+          b.classList.remove('selected', 'reveal-correct', 'reveal-wrong');
+          b.disabled = isAnswered;
+          if (isAnswered) {
+            if (b.dataset.value === q.answer) b.classList.add('reveal-correct');
+            else if (b.dataset.value === record.selected) b.classList.add('reveal-wrong');
+          }
+        });
+      } else {
+        oxArea.style.display = 'none';
+        mcArea.style.display = 'flex';
+        document.querySelectorAll('.mc-btn').forEach((btn, i) => {
+          btn.querySelector('.mc-text').textContent = q.options[i];
+          btn.classList.remove('selected', 'reveal-correct', 'reveal-wrong');
+          btn.disabled = isAnswered;
+          if (isAnswered) {
+            if (i === q.answer) btn.classList.add('reveal-correct');
+            else if (i === record.selected) btn.classList.add('reveal-wrong');
+          }
+        });
+      }
+
+      // 인라인 해설 (답변 완료된 문제만)
+      const inlineExp = document.getElementById('inline-explanation');
+      if (isAnswered) {
+        document.getElementById('inline-exp-text').textContent = q.explanation;
+        inlineExp.classList.add('visible');
+      } else {
+        inlineExp.classList.remove('visible');
+      }
+
+      // 제출 버튼
+      state.selectedAnswer = null;
+      const submitBtn = document.getElementById('btn-submit');
+      submitBtn.disabled = true;
+      submitBtn.style.display = isAnswered ? 'none' : 'block';
+
+      // 이전/다음 버튼
+      document.getElementById('btn-prev').disabled = state.currentIndex === 0;
+      document.getElementById('btn-next-q').disabled = state.currentIndex === total - 1;
+
+      // 결과 보기 버튼 (전체 응답 완료 시)
+      document.getElementById('btn-finish').classList.toggle('visible', allAnswered());
+    }
+
+    // ── 답안 선택 ──────────────────────────────────────────────────────────
+    function selectOX(value) {
+      if (state.records[state.currentIndex] !== null) return;
+      state.selectedAnswer = value;
+      document.querySelectorAll('.ox-btn').forEach(b =>
+        b.classList.toggle('selected', b.dataset.value === value)
+      );
+      document.getElementById('btn-submit').disabled = false;
+    }
+
+    function selectMC(index) {
+      if (state.records[state.currentIndex] !== null) return;
+      state.selectedAnswer = index;
+      document.querySelectorAll('.mc-btn').forEach((b, i) =>
+        b.classList.toggle('selected', i === index)
+      );
+      document.getElementById('btn-submit').disabled = false;
+    }
+
+    // ── 제출 ──────────────────────────────────────────────────────────────
+    function submitAnswer() {
+      if (state.selectedAnswer === null) return;
+      const q = state.questions[state.currentIndex];
+      const isCorrect = state.selectedAnswer === q.answer;
+      state.records[state.currentIndex] = {
+        selected: state.selectedAnswer,
+        correct: isCorrect
+      };
+      showFeedbackModal(isCorrect, q);
+    }
+
+    // ── 모달 (맞추던 틀리던 해설 항상 표시) ───────────────────────────────
+    function showFeedbackModal(isCorrect, q) {
+      const overlay = document.getElementById('modal-overlay');
+      const box = document.getElementById('modal-box');
+
+      box.className = 'modal-box ' + (isCorrect ? 'correct' : 'wrong');
+      document.getElementById('modal-verdict').textContent = isCorrect ? '정답입니다!' : '오답입니다';
+      document.getElementById('modal-emoji').textContent = isCorrect ? '🎉' : '😢';
+
+      const correctAnswerLine = document.getElementById('correct-answer-line');
+
+      if (!isCorrect) {
+        correctAnswerLine.style.display = 'block';
+        document.getElementById('modal-correct-answer').textContent = answerLabel(q);
+      } else {
+        correctAnswerLine.style.display = 'none';
+      }
+
+      document.getElementById('modal-exp-text').textContent = q.explanation;
+      document.getElementById('btn-next').textContent = allAnswered() ? '결과 보기' : '다음 문제 →';
+      overlay.classList.add('visible');
+    }
+
+    function nextUnansweredIndex(from) {
+      const total = state.questions.length;
+      for (let step = 1; step <= total; step++) {
+        const idx = (from + step) % total;
+        if (state.records[idx] === null) return idx;
+      }
+      return -1;
+    }
+
+    function closeModalAndNext() {
+      document.getElementById('modal-overlay').classList.remove('visible');
+      if (allAnswered()) {
+        showResultScreen();
+        return;
+      }
+      const nextIdx = nextUnansweredIndex(state.currentIndex);
+      if (nextIdx !== -1) {
+        state.currentIndex = nextIdx;
+        renderQuestion();
+      }
+    }
+
+    // ── 이전/다음 이동 ─────────────────────────────────────────────────────
+    function goPrev() {
+      if (state.currentIndex > 0) {
+        state.currentIndex--;
+        renderQuestion();
+      }
+    }
+
+    function goNext() {
+      if (state.currentIndex < state.questions.length - 1) {
+        state.currentIndex++;
+        renderQuestion();
+      }
+    }
+
+    function goTo(index) {
+      state.currentIndex = index;
+      closeNavPanel();
+      renderQuestion();
+    }
+
+    // ── 문제 이동 패널 ─────────────────────────────────────────────────────
+    function openNavPanel() {
+      const grid = document.getElementById('nav-grid');
+      grid.innerHTML = '';
+      state.questions.forEach((q, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-num-btn';
+        btn.textContent = i + 1;
+        const record = state.records[i];
+        if (record !== null) {
+          btn.classList.add(record.correct ? 'answered-correct' : 'answered-wrong');
+        }
+        if (i === state.currentIndex) btn.classList.add('current');
+        btn.addEventListener('click', () => goTo(i));
+        grid.appendChild(btn);
+      });
+      document.getElementById('nav-overlay').classList.add('visible');
+    }
+
+    function closeNavPanel() {
+      document.getElementById('nav-overlay').classList.remove('visible');
+    }
+
+    // ── 결과 화면 ──────────────────────────────────────────────────────────
+    function showResultScreen() {
+      const total = state.questions.length;
+      const correct = correctCount();
+      const score = Math.round((correct / total) * 100);
+      const grade =
+        score >= 90 ? '우수 ⭐' :
+        score >= 70 ? '양호 👍' :
+        score >= 50 ? '보통 📚' : '미흡 💪';
+
+      document.getElementById('result-score').textContent = `${score}점`;
+      document.getElementById('result-grade').textContent = grade;
+      document.getElementById('stat-correct').textContent = correct;
+      document.getElementById('stat-wrong').textContent = total - correct;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('result-emoji').textContent = score >= 70 ? '🏆' : '📝';
+
+      document.getElementById('btn-wrong-note').classList.toggle('visible', total - correct > 0);
+
+      showScreen('screen-result');
+    }
+
+    // ── 오답노트 ───────────────────────────────────────────────────────────
+    function buildReviewCard(q, opts) {
+      // opts: { number, myAnswer(선택 인덱스/값 또는 null), wrong(빨간 스타일 여부) }
+      const card = document.createElement('div');
+      card.className = 'review-card' + (opts.wrong ? ' wrong-card' : '');
+
+      const head = document.createElement('div');
+      head.className = 'review-q-head';
+      head.innerHTML =
+        `<span class="review-q-num">문제 ${opts.number}</span>` +
+        `<span class="review-type-badge">${q.type === 'ox' ? 'OX형' : '객관식'}</span>`;
+      card.appendChild(head);
+
+      const text = document.createElement('p');
+      text.className = 'review-q-text';
+      text.textContent = q.text;
+      card.appendChild(text);
+
+      const optWrap = document.createElement('div');
+      optWrap.className = 'review-options';
+
+      if (q.type === 'ox') {
+        ['O', 'X'].forEach(v => {
+          const row = document.createElement('div');
+          row.className = 'review-option';
+          const isAnswer = v === q.answer;
+          const isMine = opts.myAnswer !== null && opts.myAnswer !== undefined && v === opts.myAnswer && !isAnswer;
+          if (isAnswer) row.classList.add('is-answer');
+          if (isMine) row.classList.add('is-mine');
+          row.innerHTML = `<span class="opt-num">${v}</span><span>${v === 'O' ? '맞다' : '틀리다'}</span>` +
+            (isAnswer ? '<span class="answer-tag tag-correct">정답</span>' : '') +
+            (isMine ? '<span class="answer-tag tag-mine">내 답</span>' : '');
+          optWrap.appendChild(row);
+        });
+      } else {
+        const nums = ['①', '②', '③', '④'];
+        q.options.forEach((opt, i) => {
+          const row = document.createElement('div');
+          row.className = 'review-option';
+          const isAnswer = i === q.answer;
+          const isMine = opts.myAnswer !== null && opts.myAnswer !== undefined && i === opts.myAnswer && !isAnswer;
+          if (isAnswer) row.classList.add('is-answer');
+          if (isMine) row.classList.add('is-mine');
+          const optText = document.createElement('span');
+          optText.textContent = opt;
+          row.innerHTML = `<span class="opt-num">${nums[i]}</span>`;
+          row.appendChild(optText);
+          if (isAnswer) row.insertAdjacentHTML('beforeend', '<span class="answer-tag tag-correct">정답</span>');
+          if (isMine) row.insertAdjacentHTML('beforeend', '<span class="answer-tag tag-mine">내 답</span>');
+          optWrap.appendChild(row);
+        });
+      }
+      card.appendChild(optWrap);
+
+      if (q.explanation) {
+        const exp = document.createElement('div');
+        exp.className = 'review-exp';
+        const label = document.createElement('strong');
+        label.textContent = '💡 해설';
+        const body = document.createElement('span');
+        body.textContent = q.explanation;
+        exp.appendChild(label);
+        exp.appendChild(body);
+        card.appendChild(exp);
+      }
+
+      return card;
+    }
+
+    function showWrongNote() {
+      const listEl = document.getElementById('wrong-list');
+      listEl.innerHTML = '';
+
+      const wrongItems = [];
+      state.questions.forEach((q, i) => {
+        const r = state.records[i];
+        if (r && !r.correct) wrongItems.push({ q, index: i, selected: r.selected });
+      });
+
+      document.getElementById('wrong-count-badge').textContent = `${wrongItems.length}문항`;
+
+      if (wrongItems.length === 0) {
+        listEl.innerHTML =
+          '<div class="wrong-empty"><div class="emoji">🎉</div>' +
+          '<p><strong>틀린 문제가 없습니다!</strong><br>완벽합니다. 축하드려요!</p></div>';
+      } else {
+        wrongItems.forEach(item => {
+          listEl.appendChild(buildReviewCard(item.q, {
+            number: item.index + 1,
+            myAnswer: item.selected,
+            wrong: true
+          }));
+        });
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'list-bottom-actions';
+      const backBtn = document.createElement('button');
+      backBtn.className = 'btn-secondary';
+      backBtn.textContent = '← 결과로 돌아가기';
+      backBtn.addEventListener('click', () => showScreen('screen-result'));
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn-primary';
+      retryBtn.textContent = '다시 풀기';
+      retryBtn.addEventListener('click', init);
+      actions.appendChild(backBtn);
+      actions.appendChild(retryBtn);
+      listEl.appendChild(actions);
+
+      showScreen('screen-wrong');
+    }
+
+    // ── 문제·정답 모아보기 ─────────────────────────────────────────────────
+    function showStudyMode() {
+      const listEl = document.getElementById('study-list');
+      listEl.innerHTML = '';
+
+      const mcQuestions = QUESTIONS.filter(q => q.type === 'mc');
+      const oxQuestions = QUESTIONS.filter(q => q.type === 'ox');
+
+      const mcLabel = document.createElement('p');
+      mcLabel.className = 'section-label';
+      mcLabel.textContent = `객관식 (${mcQuestions.length}문항)`;
+      listEl.appendChild(mcLabel);
+
+      mcQuestions.forEach((q, i) => {
+        listEl.appendChild(buildReviewCard(q, { number: i + 1, myAnswer: null, wrong: false }));
+      });
+
+      const oxLabel = document.createElement('p');
+      oxLabel.className = 'section-label';
+      oxLabel.textContent = `OX형 (${oxQuestions.length}문항)`;
+      listEl.appendChild(oxLabel);
+
+      oxQuestions.forEach((q, i) => {
+        listEl.appendChild(buildReviewCard(q, { number: mcQuestions.length + i + 1, myAnswer: null, wrong: false }));
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'list-bottom-actions';
+      const backBtn = document.createElement('button');
+      backBtn.className = 'btn-secondary';
+      backBtn.textContent = '← 처음으로';
+      backBtn.addEventListener('click', () => showScreen('screen-start'));
+      const startBtn = document.createElement('button');
+      startBtn.className = 'btn-primary';
+      startBtn.textContent = '시험 시작하기';
+      startBtn.addEventListener('click', init);
+      actions.appendChild(backBtn);
+      actions.appendChild(startBtn);
+      listEl.appendChild(actions);
+
+      showScreen('screen-study');
+    }
+
+    // ── 이벤트 바인딩 ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btn-pw').addEventListener('click', checkPassword);
+      document.getElementById('pw-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') checkPassword();
+      });
+
+      document.getElementById('btn-start').addEventListener('click', init);
+      document.getElementById('btn-retry').addEventListener('click', init);
+      document.getElementById('btn-study').addEventListener('click', showStudyMode);
+      document.getElementById('btn-study-back').addEventListener('click', () => showScreen('screen-start'));
+      document.getElementById('btn-home').addEventListener('click', () => showScreen('screen-start'));
+
+      document.getElementById('btn-submit').addEventListener('click', submitAnswer);
+      document.getElementById('btn-next').addEventListener('click', closeModalAndNext);
+
+      document.getElementById('btn-prev').addEventListener('click', goPrev);
+      document.getElementById('btn-next-q').addEventListener('click', goNext);
+      document.getElementById('btn-finish').addEventListener('click', showResultScreen);
+
+      document.getElementById('btn-nav-panel').addEventListener('click', openNavPanel);
+      document.getElementById('btn-nav-close').addEventListener('click', closeNavPanel);
+      document.getElementById('nav-overlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('nav-overlay')) closeNavPanel();
+      });
+
+      document.getElementById('btn-wrong-note').addEventListener('click', showWrongNote);
+      document.getElementById('btn-wrong-back').addEventListener('click', () => showScreen('screen-result'));
+
+      document.querySelectorAll('.ox-btn').forEach(btn => {
+        btn.addEventListener('click', () => selectOX(btn.dataset.value));
+      });
+
+      document.querySelectorAll('.mc-btn').forEach((btn, i) => {
+        btn.addEventListener('click', () => selectMC(i));
+      });
+    });
+  </script>
+</body>
+</html>
